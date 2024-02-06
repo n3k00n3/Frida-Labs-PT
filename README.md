@@ -28,6 +28,7 @@ Se achar esse conteúdo útil, compartilhe por gentileza :)
 - https://codeshare.frida.re/
 
 Nota: Esse repositório é uma versão em Português https://github.com/DERE-ad2001/Frida-Labs
+
 PS: This Repository is a portugue version from https://github.com/DERE-ad2001/Frida-Labs.
 
 Happy Hacking
