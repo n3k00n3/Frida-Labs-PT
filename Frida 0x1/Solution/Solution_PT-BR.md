@@ -1,46 +1,46 @@
-## Prerequisites
+## Pré-requisitos
 
-- Basics of Reverse Engineering using jadx.
-- Should have the capability to understand Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
+- Básico de Engenharia Reversa usando jadx.
+- Capacidade de entender códigos Java.
+- Capacidade de escrever pequenos trechos de código em JavaScript.
+- Familiaridade com adb.
+- Dispositivo Rootado.
 
 ## Frida
 
-Let's start with the first thing. What's Frida ?
+Vamos iniciar com a primeira coisa. O que é Frida?
 
-[Frida](https://frida.re/) is like a magic tool for your computer or mobile device. It helps  you see what's happening inside other programs or apps, even if you don't have the original code. It's like looking through a window to  understand how things work. Frida can also hook into program's functionality. It's like giving you the power to modify or observe how a program or app works from the inside like,
+[Frida](https://frida.re/) é como uma ferramenta mágica para seu computador ou dispositivo móvel. Ele te ajuda a visualizar o que está acontecendo dentro de outros programas e aplicativos, mesmo que você não tenha o código original. É como olhar através de uma janela para entender como as coisas funcionam. Frida também pode hookar as funcionalidades dos programas. Com Frida você tem o poder de modificar e observar como um programa ou aplicativo móvel funciona por dentro.
 
-- **Intercepting Function Calls:** Frida allows you to identify specific functions or methods within a program or app and intercept them. When these functions are called, Frida can make changes to the data they receive or see what they're doing.
+- **Intercpetando Chamadas de Funções:** Frida permite que você identifique funções especificas ou métodos dentro de um programa ou aplicativo e interceptar elas. Quando essas funções são chamadas, Frida pode realizar mudanças nos dados que as funções recebem ou verificar o que elas estão fazendo.
 
-- **Observing and Modifying:** You can watch what's happening inside the program in real-time. For example, you can see the values of variables, understand the flow of the program, and even modify the data or code as it's being executed.
+- **Observando e Modificando:** Você pode monitorar o que está acontecendo dentro do programa em tempo de execução. Por exemplo, você pode ver os valotes das variáveis, entender o fluxo do programa e modificar o dado ou código que está sendo executado.
 
-- **Debugging and Reverse Engineering**: This capability is valuable for debugging, reverse engineering, and security analysis. It's used by developers to diagnose and fix issues in their software, and by security experts to uncover vulnerabilities and potential threats.
+- **Debugging e Engenharia Reversa**: Essa capacidade é valiosa para o debugging, engenharia reversa e análise de segurança. É utilizada por desenvolvedores para diagnosticar e corrigir bugs em seus programas, assim como também é utilizada por profissionais de segurança, para descobrir vulnerabilidades e potenciais ameaças.
 
-- **Dynamic Analysis:** Unlike traditional debugging tools, Frida doesn't require access to the original source code. It can work with compiled code, making it very useful for examining closed-source applications.
+- **Análise Dinamica:** Diferente de ferramentas tradicionais de debug, Frida não requer acesso ao código fonte original. Podendo trabalhar com código compilado, Tornando útil para para examinar aplicações com código fechado.
 
-We will cover some of the fundamental Frida usage techniques for analyzing Android applications.
+Nós vamos cobrir alguns dos usos fundamentais do Frida para a análise de aplicações Android.
 
 ## Setup
 
-To set up Frida, we need to install `frida-tools` on our system and run the `frida-server` on the device. You can install Frida using `pip`.
+Para configurar Frida, precisamos instalar `frida-tools` em nosso sistema e executar o `frida-server` no dispostivo. Você pode instalar usando `pip`.
 
 ```
 pip install frida-tools
 ```
 
-Next part is to copy frida server in the device.
+Próxima parte é copiar o servidor frida no dispostivo.
 
 ```
 https://github.com/frida/frida/releases
 ```
 
-You should select the server based on your architecture. Since I'm using an emulator in my Android Studio, which is x86, I will download the x86 version.
+Você  deve selecionar o servidor baseado na sua arquitetura. Se eu estiver usando um emulador no Android Studio ou Genymotion, em uma plataforma x86, teremos que fazer o download da versão x86 do frida-server.
 
 ![](images/1.png)
 
- If you don't know about your device's architecture, use the below adb command.
+Se você não sabe qual a arquitetura de seu dispositivo, use o comando a seguir.
 
 ```
 adb shell getprop ro.product.cpu.abi
@@ -48,7 +48,7 @@ adb shell getprop ro.product.cpu.abi
 
 ![](images/2.png)
 
-If you device is arm64, download the arm64 server.
+Se o seu dispositivo é arm64, baixe o servidor arm64.
 
 ![](images/3.png)
 

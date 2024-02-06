@@ -1,28 +1,33 @@
 
 ![Frida-Labs](https://github.com/DERE-ad2001/Frida-labs/assets/67110398/e5794a19-1ee7-4820-81c7-fd362f78c842)
 
-This repository contains a series of challenges designed for learning Frida for Android. These are not like hardcore Capture The Flag (CTF) applications but will help you to start with Frida and its commonly used APIs. If you are entirely new to Frida, this is the perfect repository to get started. I have organized the challenges in a way that covers everything from the basics to an intermediate level.
+Este repositório contém uma série de desafios, desenhados para o aprendizado do Frida para Android. Eles não são como os desafios complexos de Capture The Flag (CTF), mas vão te ajudar a começar com Frida e suas APIs mais utilizadas. Se você é completamente novo no quesito Frida, esse repositório é perfeito para começar. Eu organizei os desafios de forma que cubra todos os pontos básicos até o nível intermediário.
 
-These challenges have flags but that's not the primary goal here. You can easily get the flags using other methods. But the goal of these challenges is to equip you with the fundamentals, helping you to use Frida and understand the Frida scripts written by others. While doing these challenges, try to obtain the flag through many ways as possible using frida. I will be updating this repository with new challenges whenever I find something interesting.
+Esses desafios também possuem flags, mas capturar a flag não é o primeiro objetivo aqui, você pode facilmente conseguir essas flags utilizando outros métodos. O objetivo desses desafios é te capacitar com os fundamentos, te ajudando a usar Frida e entender os scripts Frida escritos por outras pessoas. Enquanto estiver fazendo esses desafios, tente obter a mesma flag através de modos diferentes. Estarei atualizando o repositório com novos desafios sempre que encontrar algo interessante.
 
-All the APKs are inside the directories, and the solutions are also provided in the solution directory. If you are not familiar with the setup and have like zero idea about Frida, you can go through the first solution.
+Todos os APKs estão dentro dos diretórios, assim como as suas devidas soluções. Se você não tiver familiaridade com o ambiente ou possuir zero conhecimento sobre Frida, vá até a primeira solucão.
 
-If you find this series useful please share :)
+Se achar esse conteúdo útil, compartilhe por gentileza :)
 
-# Challenges Overview
-- Challenge 0x1 : Frida setup, Hooking a method
-- Challenge 0x2 : Calling a static method
-- Challenge 0x3 : Changing the value of a variable
-- Challenge 0x4 : Creating a class instance
-- Challenge 0x5 : Invoking methods on an existing instance
-- Challenge 0x6 : Invoking a method with an object argument
-- Challenge 0x7 : Hooking the constructor
-- Challenge 0x8 : Introduction to native hooking
-- Challenge 0x9 : Changing the return value of a native function
-- Challenge 0xA : Calling a native function
-- Challenge 0xB : Patching instructions using X86Writer and ARM64Writer
+# Sumário de Desafios
+- Challenge 0x1 : Frida setup, Hooking um método.
+- Challenge 0x2 : Chamando um método estático.
+- Challenge 0x3 : Mudando o valor de uma váriavel.
+- Challenge 0x4 : Criando uma instância de classe.
+- Challenge 0x5 : Invocando métodos em instâncias existentes.
+- Challenge 0x6 : Invocando um método com um argumento de objeto.
+- Challenge 0x7 : Hooking o construtor
+- Challenge 0x8 : Introdução de hooking nativos.
+- Challenge 0x9 : Mudandoo valor de retorno de uma função nativa.
+- Challenge 0xA : Chamando uma função nativa.
+- Challenge 0xB : Patching de instrução usando X86Writer e ARM64Writer
 
-# Further resources
+# Recursos adicionais
 
 - https://learnfrida.info/advanced_usage/
 - https://codeshare.frida.re/
+
+Nota: Esse repositório é uma versão em Português https://github.com/DERE-ad2001/Frida-Labs
+PS: This Repository is a portugue version from https://github.com/DERE-ad2001/Frida-Labs.
+
+Happy Hacking
