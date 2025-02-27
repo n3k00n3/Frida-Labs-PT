@@ -54,22 +54,20 @@ Se o seu dispositivo é arm64, baixe o servidor arm64.
 
 After downloading it, extract it and push it into a writable directory.
 
+Depois de baixar o binário, extraia e envie para uma pasta com permissão de escrita como pode exemplo a pasta `/data/local/tmp`
+
 ![](images/4.png)
 
-`/data/local/tmp` typically has no problems, so I will push the server there.
-
-```
+``` bash
 adb push frida-server-16.1.4-android-x86 /data/local/tmp
 ```
 
 ![](images/5.png)
 
-Now navigate into the `tmp` directory. To get a shell inside the device, you can use `adb shell`.
+Agora navegue até a pasta `tmp`. Para obter uma shell dentro do dispositivo utilize o comando `adb shell`.
 
 ```
 D:\Downlaods> adb shell
-generic_x86:/ # cd /data/local
-local.prop  local/
 generic_x86:/ # cd /data/local/tmp/
 generic_x86:/data/local/tmp # ls
 frida-server-16.0.19-android-x86  frida-server-16.1.4-android-x86  lldb-server  perfd  start_lldb_server.sh
@@ -77,48 +75,48 @@ generic_x86:/data/local/tmp #
 
 ```
 
-Let's grant executable permission to the `frida-server` binary.
+Vamos garantir a permissão de execução para o binário `frida-server`.
 
 ```
 generic_x86:/data/local/tmp # chmod +x frida-server-16.1.4-android-x86
 ```
 
-Now let's run the server.
+Finalmente podemos executar o binário do servidor.
 
 ![](images/6.png)
 
-It's running fine. If you encounter any errors, I recommend trying a  Google search for solutions. Additionally, you can check the git repository for known issues and potential fixes.
+Isso é tudo que precisamos fazer para executar o `frida-server`. Se você encontrar algum erro durante a execução, Recomendo pesquisar pelo erro no buscador google ou outro de sua preferência. Você também pode checar o repositório git por problemas conhecidos e potenciais soluções.
 
-## Basic usage Frida
+## Uso básico do Frida
 
-If you want to retrieve a list of packages installed on your device, you can use the following command,
+Se você deseja verificar a lista de pacotes instalados em seu dispositivo, você pode utilizar o seguinte comando:
 
 ```
  frida-ps -Uai
 ```
 
-- `frida-ps`:  This displays the information about running processes on an Android device.
-- `-U`: This option is used to list processes on a USB-connected device (physical device or emulator).
-- `-a`: This option is used to list all processes, not just the ones owned by the current user.
-- `-i`: This option is used to include details about each process, such as the process ID (PID) and the name of the process.
+- `frida-ps`: Exibe quais processos estão sendo executados no dispositivo Android.
+- `-U`: Essa opção é utilizada para listar os processos em dispositivos conectados via USB (fisícos ou emulados).
+- `-a`: Essa opção é utilizada para listar todos os processos.
+- `-i`: Essa opção é utilizada para incluir detalhes sobre cada processo, como ID do processo (PID) e o nome dos processos.
 
 ![](images/7.png)
 
-If you want to retrieve the package name of a specific application, you can use the `grep` command.
+Se você deseja verificar o pacote de uma aplicação especifica, você pode utilizar o comando `grep`.
 
 ```
-frida-ps -Uai | grep '<name_of_application>'
+frida-ps -Uai | grep '<nome_da_aplicação>'
 ```
 
-For attaching frida with an application we require the application package name. So after getting the package name, we can attach frida like this,
+Para anexar frida com uma aplicação é necessário o nome do pacote. Depois de verificar o nome do pacote é possível anexar utilizando o seguinte comando:
 
 ```
 frida -U -f <package_name>
 ```
 
-Let's see an example.
+Vamos ver um exemplo.
 
-I will try to attach frida with the calculator application. The package name is `com.ad2001.calculator`.
+Iremos tentar anexar frida com a aplicação de calculadora. O nome do pacote é `com.ad2001.calculator`.
 
 ```
 frida -U -f com.ad2001.calculator
@@ -126,41 +124,39 @@ frida -U -f com.ad2001.calculator
 
 ![](images/8.png)
 
-Let's take look at the emulator.
+Verificando o emulador.
 
 ![](images/9.png)
 
-Frida launched the specified application in our device. Now that the application has been spawned, and Frida is attached, we can proceed with our dynamic instrumentation.
+Frida carregou a aplicação em nosso dispositivo. Agora que a aplicação está spawned, e anexamos frida, podemos proceder com nossa instrumentação dinâmica.
 
-## Introduction to Hooking
+## Introdução ao Hooking
 
-Let's start with the very basics.
+Vamos iniciar com a parte mais básica.
 
-What's hooking ?
+O que é hooking ?
 
-**Hooking** refers to the process of intercepting and  modifying the behavior of functions or methods in an application or the  Android system itself. For example, we can hook a method in our  application and change its functionality by inserting our own  implementation.
+**Hooking** se refere ao processo de interceptação e modificação do comportamento de funções ou métodos em uma aplicação ou do próprio sistema Android. Por exemplo, podemos 'hookar' um método em nossa aplicação e modificar sua funcionalidade, inserido nosso próprio código.
 
-Now, let's attempt to hook a method in an application. We will be doing this using the JavaScript API, but it's worth noting that Frida also supports Python.
+Agora, Vamos tentar 'hookar' um metódo em uma aplicação. Vamos fazer isso utilizando a API JavaScript, mas tenha em mente que Frida também tem suporte para Python.
 
-## Challenge 0x1
+## Desafio 0x1
 
-The application I will be using is the challenge APK itself. The  challenge is essentially a CTF-style application, and the name of the  APK is `frida 0x1`. Let's find its package name.
+A aplicação que utilizaremos é um APK de desafio. O desafio está essencialmente no estilo CTF, e o nome do APK é `frida 0x1`. Vamos encontrar o nome do pacote.
 
 ![](images/10.png)
 
-Before attaching the application to Frida, let's take a moment to  understand the application. Upon opening the application, we can see the interface below:
+Antes de anexar a aplicação ao Frida, vamos tirar um momento para entender a aplicação. Assim que abrimos a aplicação, podemos ver a interface como da seguinte imagem: 
 
 ![](images/11.png)
 
 
-
-The application asks us to enter a number. Let's enter a number and see.
+A aplicação exige que seja inserido uma número. Vamos enviar um número e verificar o que acontece.
 
 ![](images/12.png)
 
 
-
-It says `Try again`.  So let's try to decompile the application using jadx.
+A aplicação diz `Try again`. Então, vamos tentar decompilar a aplicação utilizando Jadx.
 
 ![](images/13.png)
 
