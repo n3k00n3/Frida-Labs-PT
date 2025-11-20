@@ -1,114 +1,149 @@
-## Prerequisites
 
-- Basics of Reverse Engineering using jadx.
-- Ability to understand Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
+## Pré-requisitos
 
-## Challenge 0x7
+* Básico de Engenharia Reversa usando jadx.
+* Capacidade de entender código Java.
+* Capacidade de escrever pequenos trechos em JavaScript.
+* Familiaridade com adb.
+* Dispositivo com root.
 
-This challenge is similar to challenge 0x5, but there's a tiny difference. In this challenge, we will learn how to hook the constructor. So let's install the apk.
+## Desafio 0x7
+
+Este desafio é semelhante ao **Challenge 0x5**, porém com uma diferença importante:
+
+Aqui vamos aprender a **hookar um construtor**
+
+Primeiro, instalamos e abrimos o APK:
 
 ![](images/1.png)
 
-Ah yes... Our plain old  "Hello World!" . Let's use jadx to see the decompilation.
+Sim… nosso clássico **Hello World!** 
+Vamos abrir no JADX:
 
 ![](images/2.png)
 
-We can observe a similar pattern to our previous challenges, but this time the `flag` method is called! However, as the values of `num1` and `num2` don't satisfy the `if` condition, so we won't get the flag. Let's take a look at the `Checker` method.
+Podemos observar um padrão muito parecido com os desafios anteriores:
+
+* O método `flag()` existe
+* Ele é **chamado** no código
+* Porém, os valores nos atributos não satisfazem o `if` → nenhuma flag aparece
+
+Vamos olhar a classe `Checker`:
 
 ![](images/3.png)
 
-This time, we have a constructor that takes two integer values. These values are assigned to the local variables `num1` and `num2`. To obtain the flag, `num1` and `num2` should be greater than 512.
+Aqui temos um **construtor** que recebe dois inteiros:
+
+* Eles são armazenados em `num1` e `num2`
+* E para passar na verificação, ambos devem ser **maiores que 512**
 
 ```java
-public void flag(Checker A) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+public void flag(Checker A) {
     if (A.num1 > 512 && 512 < A.num2) {
-        ...
-        ...
-        ...
+        // FLAG!!
     }
 }
 ```
 
-One way to solve this is by obtaining an instance or creating an instance of the `Checker` class and changing the values of the variables. Then, we can get the instance of the `MainActivity` and call the `flag` function with the instance of the `Checker` class. We have already learned how to do this before. The only difference is that we now have a constructor. When using the `$new` operator, pass the arguments in the brackets for the constructor.
+---
+
+## Primeira solução (mais simples)
+
+Criamos um objeto `Checker` com valores válidos e chamamos `flag()`:
 
 ```javascript
-var checker_obj = checker.$new(600, 600); // Class Object
+var checker_obj = checker.$new(600, 600);
 ```
 
-Anyways, we can easily solve this by the below script.
+Script completo:
 
 ```javascript
 Java.performNow(function() {
   Java.choose('com.ad2001.frida0x7.MainActivity', {
     onMatch: function(instance) {
-    console.log("Instance found");
+      console.log("Instance found");
 
-    var checker = Java.use("com.ad2001.frida0x7.Checker");
-    var checker_obj  = checker.$new(600, 600); // Class Object
-    instance.flag(checker_obj); // invoking the get_flag method
-  },
+      var checker = Java.use("com.ad2001.frida0x7.Checker");
+      var checker_obj  = checker.$new(600, 600);
+      instance.flag(checker_obj);
+    },
     onComplete: function() {}
   });
 });
 ```
 
-
+Rodando o script, a flag é exibida:
 
 <img src="images/4.jpg" style="zoom:25%;" />
 
-We got the flag easily but let's do it by hooking the constructor
+Fácil demais, né?
 
-## Hooking the constructor
-> **Note:** This doesn't work for ARM64 devices - https://github.com/frida/frida/issues/1575
+Mas agora vamos ao objetivo real do desafio…
 
-It's very easy to hook the constructor. it's similar to hooking a method. Let me provide you a template.
+---
+
+## Hookando o Construtor
+
+> **Atenção:** Esse método não funciona em ARM64
+> Referência: [https://github.com/frida/frida/issues/1575](https://github.com/frida/frida/issues/1575)
+
+Hookar um construtor é parecido com hookar qualquer método:
+
+Usamos o nome: `$init`
+
+Template:
 
 ```javascript
 Java.perform(function() {
-  var <class_reference> = Java.use("<package_name>.<class>");
-  <class_reference>.$init.implementation = function(<args>){
-
-    /*
-
-    */
-
+  var <class_ref> = Java.use("<package>.<Classe>");
+  <class_ref>.$init.implementation = function(<args>) {
+    // Nosso código
   }
 });
 ```
 
-As we can see for hooking the constructor, we can use the `$init` keyword.
-
-Let's try to hook the constructor `Checker` method.
+Aplicando ao nosso caso:
 
 ```javascript
 Java.perform(function() {
-  var a =  Java.use("com.ad2001.frida0x7.Checker");
-  a.$init.implementation = function(param){
-    // TODO
-  }
-});
-```
+  var a = Java.use("com.ad2001.frida0x7.Checker");
+  a.$init.implementation = function(param) {
 
-Okay, now let's call the original constructor with the values greater than 512, so that they will be assigned to `num1` and `num2`. This is similar to calling the original method we did before.
-
-```javascript
-Java.perform(function() {
-  var a =  Java.use("com.ad2001.frida0x7.Checker");
-  a.$init.implementation = function(param){
+    // Substituímos os valores recebidos por valores válidos
     this.$init(600, 600);
   }
 });
 ```
 
-Now let's start Frida with this script. As you know, the constructor will be invoked when an instance is created. In our application, an instance of the `Checker` class is created in the `onCreate` method. Therefore, we have to load this script at runtime using the `-l` option.
+---
 
+### Execução
+
+Como `Checker` é instanciado dentro do `onCreate()`:
+
+✔ O construtor será executado logo no início da aplicação
+✔ Portanto, precisamos **injetar o script no spawn do app**
+
+```bash
+frida -U -f com.ad2001.frida0x7 -l hook.js
 ```
-PS C:\Users\ajind> frida -U -f com.ad2001.frida0x7 -l .\Downloads\hook.js
-```
+
+Resultado:
 
 <img src="images/5.jpg" style="zoom:25%;" />
 
-And we got our flag.  So this is how we hook and manipulate constructors using frida.
+FLAG obtida via hook do construtor!
+
+---
+
+## Conclusão
+
+Neste desafio você aprendeu:
+
+| Conceito                             | O que aprendeu                                       |
+| ------------------------------------ | ---------------------------------------------------- |
+| Hookar construtores                  | `$init.implementation`                               |
+| Modificar atributos já no construtor | Mudando valores antes do app usar                    |
+| Interceptação durante instanciamento | O app chama o construtor → você muda o comportamento |
+
+Agora você está pronto para manipular criação de objetos e lógica do app **desde o começo da execução** 

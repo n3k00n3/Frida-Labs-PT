@@ -1,23 +1,25 @@
-## Prerequisites
 
-- Basics of Reverse Engineering using jadx.
-- Ability to understand Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
-- Basics of x86/ARM64 assembly and reversing.
+## Pré-requisitos
 
-## Challenge 0xA
+* Básico de Engenharia Reversa usando JADX.
+* Capacidade de entender código Java.
+* Capacidade de escrever pequenos trechos em JavaScript.
+* Familiaridade com adb.
+* Dispositivo com root.
+* Conhecimentos básicos de assembly x86/ARM64 e reversing.
 
-Let's start by installing the application.
+## Desafio 0xA
+
+Vamos começar instalando o aplicativo.
 
 ![](images/1.png)
 
-As usual let's use jadx.
+Como sempre, vamos abrir no JADX.
 
 ![](images/2.png)
 
-This is exactly like our previous apk but this time the apk is developed in kotlin. We can see it's loading the `frida0xa` library at the bottom.
+Este APK é muito parecido com os anteriores, porém desta vez o app foi desenvolvido em Kotlin.
+No final do arquivo podemos ver o carregamento da biblioteca nativa:
 
 ```java
 static {
@@ -25,156 +27,142 @@ static {
 }
 ```
 
-We can also see a JNI method at the beginning.
+Também há um método JNI declarado:
 
 ![](images/3.png)
 
-This function returns a string. We see that the app calls this method from the `frida0xa.so` library and sets the text in the `TextView`. This is the text "Hello Hackers," which is then displayed in our `TextView`. Okay let's decompile this apk using apktool and examine the library.
+Esse método retorna uma string. O app chama esse método da biblioteca `frida0xa.so` e define o seu retorno no `TextView`, exibindo o texto "Hello Hackers" ao iniciar o aplicativo.
+
+Vamos decompilar o APK com apktool e examinar a biblioteca:
 
 ![](images/4.png)
 
-Let's load this into ghidra.
+Agora, vamos abrir essa biblioteca no Ghidra:
 
 ![](images/5.png)
 
-It's done analyzing. Now let's see the functions.
+Análise concluída. Vamos inspecionar as funções:
 
 ![](images/6.png)
 
-We have two functions.
+Temos duas funções principais:
 
-- `get_flag()`
-- `Java_com_ad2001_frida0xa_MainActivity_stringFromJNI()`
+* `get_flag()`
+* `Java_com_ad2001_frida0xa_MainActivity_stringFromJNI()`
 
-We already know that our textview is calling the `stringFromJNI()` method to set the text "Hello Hackers". You can confirm this by checking the  decompilation.
+Como visto, é o método `stringFromJNI()` que define o texto inicial no TextView:
 
 ![](images/7.png)
 
-The next function is the `get_flag()` method. This function wasn't declared in the Java space, and it's also not being called from anywhere in the library. You can confirm this by checking its cross-reference. The only reference is in the (Frame Description Entry)  FDE table.
+Agora vamos analisar a função `get_flag()`:
+
+* Não está declarada no código Java/Kotlin
+* Não é chamada em nenhum lugar da aplicação
+* É apenas referenciada pela tabela FDE
 
 ![](images/8.png)
-
 ![](images/9.png)
 
-Let's examine the decompilation of this method.
+Decompilação da função:
 
 ![](images/10.png)
 
-The function takes two integer values, adds them, and checks if the result is equal to 3. If it's equal to 3, there's a loop. It decodes the hardcoded string `FPE>9q8A>BK-)20A-#Y` and logs the decoded flag. So to get the flag, we need to call this method.
+A função recebe dois inteiros, soma e verifica se o resultado é igual a `3`. Caso seja, executa um loop que decodifica a string `FPE>9q8A>BK-)20A-#Y` e registra a flag no log.
 
-Yes, that's right. We are going to use frida to call this native function. How cool is that !!.
+Conclusão: Para obter a flag precisamos chamar essa função manualmente.
 
-## Calling the native function
+Vamos usar Frida para isso.
 
-You won't believe how simple this is. Let me provide a template.
+---
+
+## Chamando a função nativa com Frida
+
+Modelo básico:
 
 ```javascript
-var native_adr = new NativePointer(<address_of_the_native_function>);
-const native_function = new NativeFunction(native_adr, '<return type>', ['argument_data_type']);
+var native_adr = new NativePointer(<address>);
+const native_function = new NativeFunction(native_adr, '<return type>', ['argument_types']);
 native_function(<arguments>);
 ```
 
-Let me explain this line by line.
+Explicação:
 
-```javascript
-var native_adr = new NativePointer(<address_of_the_native_function>);
-```
+1. Criamos um `NativePointer` apontando para o endereço da função
+2. Criamos um `NativeFunction`, informando:
 
-To call a native function in frida, we need an `NativePointer` object. We should  the pass the address of the native function we want to call to the NativePointer constructor. Next, we will create the `NativeFunction` object , this represents the actual native function we want to call. It creates a JavaScript wrapper around a native function, allowing us to call that native function from frida.
+   * endereço do ponteiro
+   * tipo de retorno da função
+   * tipos dos argumentos
+3. Chamamos como uma função comum
 
-```javascript
-const native_function = new NativeFunction(native_adr, '<return type>', ['argument_data_type']);
-```
+---
 
-The first argument should the `NativePointer` object, Second argument is the return type of the native function, the third argument is a list of the data types of the arguments to be passed to the native function. Now we can call the method just like we did in the java space.
+### Encontrando o endereço da função
 
-```javascript
-native_function(<arguments>);
-```
-
-Okay, we get the idea. Let's write the script to call the `get_flag` method.
-
-Firstly we need the address for the `get_flag` method. We can use ghidra to find the offset and add that to base address of the `libfrida0xa.so`.
+Vamos iniciar o Frida para obter o endereço base da lib:
 
 ```
-PS C:\Users\ajind> frida -U -f com.ad2001.frida0xa
+frida -U -f com.ad2001.frida0xa
 ```
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xa ]-> Module.getBaseAddress("libfrida0xa.so")
+Module.getBaseAddress("libfrida0xa.so")
 "0xc1859000"
 ```
 
+Agora, no Ghidra verificamos o offset:
+
 ![](images/11.png)
 
-We can get the offset by substracting this address from the image base. By default ghidra loads binaries at `0x00010000` . We can find this base in the memory map.
+Base usada pelo Ghidra:
 
 ![](images/12.png)
-
 ![](images/13.png)
 
-So the offset = `0x00028bb0` - `0x00010000` = `0x18BB0`. Now we can add that to the base.
+Cálculo:
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xa ]-> Module.getBaseAddress("libfrida0xa.so") .add(0x18BB0)
-"0xc1871bb0"
-[Android Emulator 5554::com.ad2001.frida0xa ]->
+Offset = 0x00028BB0 - 0x00010000 = 0x18BB0
 ```
 
-Okay, now we got the address.
+Somando base real + offset:
+
+```
+Module.getBaseAddress("libfrida0xa.so").add(0x18BB0)
+// 0xc1871bb0
+```
+
+Endereço obtido com sucesso.
+
+---
+
+### Script final
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0)
-```
-
-Next let's create the NativePointer object.
-
-```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
-var get_flag_ptr = new NativePointer(adr);
-```
-
-Now let's create the `NativeFunction` object. The first argument is `get_flag_ptr`. The second argument is the data type; here, `get_flag` is a void function, so we will pass `void`. Lastly, the `get_flag` function has two arguments, both of which are integers, so we will pass `['int', 'int']` as the third argument.
-
-```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
+var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0);
 var get_flag_ptr = new NativePointer(adr);
 const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
+get_flag(1, 2);
 ```
 
-Now we just call this function with the arguments. Before that, take a look at the decompilation again.
+Justificativa:
+O `if` na função verifica:
 
 ```c
-if (param_1 + param_2 == 3) {
-  local_30 = 0;
-  while( true ) {
-    uVar1 = __strlen_chk("FPE>9q8A>BK-)20A-#Y",0xffffffff);
-    if (uVar1 <= local_30) break;
-    local_20[local_30] = "FPE>9q8A>BK-)20A-#Y"[local_30] + (char)(local_30 << 1);
-    local_30 = local_30 + 1;
-  }
-  local_d = 0;
-  __android_log_print(3,&DAT_0001bf62,"Decrypted Flag: %s",local_20);
-}
+param_1 + param_2 == 3
 ```
 
-We need the sum of our arguments to equal `3` to pass the `if` check. So, we can pass `1` and `2` as the arguments and call the method. So the final script will look like.
+Portanto, argumentos `1` e `2` são suficientes.
 
-```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
-var get_flag_ptr = new NativePointer(adr);
-const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
-get_flag(1,2);
-```
+---
 
-Let's run frida and try this script.
+### Execução
 
 ![](images/14.png)
-
 ![](images/15.png)
 
-Luckily there are no errors. Let's check the logs.
+Verificando o log:
 
 ![](images/16.png)
 
-Yay! We got the flag. Frida is indeed awesome :)
+Flag obtida com sucesso.

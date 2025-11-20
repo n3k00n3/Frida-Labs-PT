@@ -1,97 +1,133 @@
-## Prerequisites
 
-- Basics of Reverse Engineering using jadx.
-- Ability to understand Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
+## Pré-requisitos
 
-## Challenge 0x4
+* Básico de Engenharia Reversa usando jadx.
+* Capacidade de entender código Java.
+* Capacidade de escrever pequenos trechos em JavaScript.
+* Familiaridade com adb.
+* Dispositivo com root.
 
-Let's take a look at our challenge apk.
+## Desafio 0x4
+
+Vamos dar uma olhada no APK do desafio:
 
 ![](images/1.png)
 
-Pretty much nothing. Let's see the decompilation.
+Praticamente nada acontecendo na interface. Vamos ver a descompilação.
 
 ![](images/2.png)
 
-There's nothing in the `MainActivity`. Let's inspect the class `Check`.
+Nada útil na `MainActivity`.
+Então vamos inspecionar a classe `Check`.
 
 ![](images/3.png)
 
-We can see a method named `get_flag`; it's a basic XOR function that decodes the text `I]FKNtW@]JKPFA\\[NALJr` using the key `15`. While we could easily solve it, as mentioned before, our goal is to get better with Frida. As we can see, this method is not called anywhere. Also, at the start of the function, it checks if `a` is equal to `1337`. To get the flag, we can call this method and pass the value `1337` as the argument using Frida. We have done this in the previous post but it had a static method.
+Podemos ver um método chamado `get_flag`.
+Ele realiza uma operação simples de **XOR** para decodificar o texto:
 
-## Calling the get_flag()
+```
+I]FKNtW@]JKPFA\\[NALJr
+```
 
-Let's see how to call the `get_flag` method. As we know, this is not a static method, so first, we need to create an instance of the  class. Using that instance, we can then call the method. Below is the  corresponding Java code:
+Usando a chave:
+
+```
+15
+```
+
+Sim, seria fácil descriptografar estáticamente — mas o objetivo aqui é **treinar Frida** 🎯
+
+Observações importantes:
+
+* O método **não é chamado** em nenhum lugar do app
+* A função verifica se o argumento `a == 1337`
+* Se a condição for satisfeita → retorna a FLAG
+
+Portanto: basta **invocar esse método com 1337 usando Frida**
+Já fizemos algo parecido antes, mas aquela era uma função **estática**
+Desta vez, **precisamos instanciar a classe** antes de chamar o método.
+
+---
+
+## Chamando o método `get_flag()` com Frida
+
+Exemplo de como isso seria feito em Java nativamente:
 
 ```java
 Check ch = new Check();
 String flag = ch.get_flag(1337);
 ```
 
-The function will return a string, so we  should store that in a variable.
+Ou seja:
 
-Let's see how to do this in frida.
+✔ Criar objeto
+✔ Chamar método
+✔ Capturar retorno (String)
 
-```javascript
-Java.perform(function() {
+---
 
-  var <class_reference> = Java.use("<package_name>.<class>");
-  var <class_instance> = <class_reference>.$new(); // Class Object
-  <class_instance>.<method>(); // Calling the method
-
-})
-```
-
-In Frida, to create an instance of a Java class, you can use the `$new()` method. This is a Frida-specific method allows you to instantiate objects of a particular class.
-
-This is the template. Let's start writing the real script.
-
-- Package name : `com.ad2001.frida0x4`
-- Class name : `Check`
-- Function name : `get_flag`
-
-```javascript
-
-Java.perform(function() {
-
-  var check = Java.use("com.ad2001.frida0x4.Check");
-
-})
-```
-
-Let's create this instance using `$new()` method.
+Estrutura base em Frida:
 
 ```javascript
 Java.perform(function() {
 
-  var check = Java.use("com.ad2001.frida0x4.Check");
-  var check_obj = check.$new(); // Class Object
+  var <class_reference> = Java.use("<pacote>.<classe>");
+  var <instancia> = <class_reference>.$new(); // Cria objeto
+  <instancia>.<metodo>(); // Chama o método
 
-})
+});
 ```
 
-Now we can easily call the `get_flag` method.
+ `$new()` é um método especial do Frida utilizado para instanciar classes Java.
+
+---
+
+Agora, aplicando ao nosso desafio:
+
+* Pacote: `com.ad2001.frida0x4`
+* Classe: `Check`
+* Método: `get_flag(int a)`
+
+### Script Final:
 
 ```javascript
 Java.perform(function() {
 
   var check = Java.use("com.ad2001.frida0x4.Check");
-  var check_obj = check.$new(); // Class Object
-  var res = check_obj.get_flag(1337); // Calling the method
-  console.log("FLAG " + res);
+  var check_obj = check.$new(); // Instância da classe
+  var res = check_obj.get_flag(1337); // Invocando o método
 
-})
+  console.log("FLAG: " + res);
+
+});
 ```
 
-Let's start frida and test this.
+---
 
-```
+### Execução:
+
+```bash
 frida -U -f com.ad2001.frida0x4
 ```
 
+Cole o script no console:
+
 ![](images/4.png)
 
-Yeyy.. We got the flag.
+---
+
+Sucesso! Flag obtida com Frida!
+
+---
+
+## Conclusão
+
+Neste desafio você aprendeu:
+
+| Habilidade                       | Descrição                    |
+| -------------------------------- | ---------------------------- |
+| Instanciar classes Java no Frida | Usando `$new()`              |
+| Invocar métodos não estáticos    | Passando argumentos corretos |
+| Capturar valores de retorno      | Logs via `console.log()`     |
+
+Continuamos ampliando o arsenal para engenharia reversa dinâmica em Android 

@@ -1,34 +1,46 @@
-## Prerequisites
 
-- Basics of Reverse Engineering using jadx.
-- Proficiency in reading and understanding Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
+## Pré-requisitos
 
-## Challenge 0x3
+* Básico de Engenharia Reversa usando jadx.
+* Proficiência em leitura e entendimento de código Java.
+* Capacidade de escrever pequenos trechos em JavaScript.
+* Familiaridade com adb.
+* Dispositivo com root.
 
-Let's start with our apk. So let's install the application and take a look.
+## Desafio 0x3
+
+Vamos começar com nosso APK. Primeiro instalamos a aplicação e observamos como ela funciona:
 
 ![](Images/1.png)
 
-The application has a button and a TextView. The TextView provides a  hint about the flag. There's no EditText to input anything. If you click on the  button, it says "TRY AGAIN." Let's stop wasting time analyzing this and  move on to reversing it using JADX.
+A aplicação possui um botão e um TextView.
+O TextView fornece uma dica sobre a flag.
+Não há campos de entrada (EditText).
 
-Let's load the application into jadx.
+Quando clicamos no botão → aparece **"TRY AGAIN"**.
+Então, vamos para a engenharia reversa com JADX.
+
+Carregando no jadx:
 
 ![](Images/2.png)
 
-This time we have an extra class. Let's take a look at `Checker`.
+Dessa vez temos uma classe extra. Vamos observar a classe `Checker`.
 
 ![](Images/3.png)
 
-In this class, there's a static int variable called `code` assigned a value of 0. Additionally, there's a static method named `increase()`. This method simply adds two to the `code` variable when called. This method is not called anywhere in the application so the value of `code` variable won't get changed.
+Nesta classe:
 
-Let's inspect the code in`MainActivity`.
+* Existe uma variável estática inteira chamada `code` inicializada em **0**
+* Existe um método estático `increase()`
+
+Este método simplesmente **adiciona 2** ao valor de `code` quando chamado.
+Mas ele **não é chamado em nenhum ponto** da aplicação → logo, `code` nunca muda.
+
+Agora vamos inspecionar o código da `MainActivity`:
 
 ```java
 btn.setOnClickListener(new View.OnClickListener() { // from class: com.ad2001.frida0x3.MainActivity.1
-    @Override // android.view.View.OnClickListener
+    @Override
     public void onClick(View v) {
         if (Checker.code == 512) {
             ...
@@ -40,16 +52,27 @@ btn.setOnClickListener(new View.OnClickListener() { // from class: com.ad2001.fr
 });
 ```
 
-When the button is clicked, it checks whether the `code` variable in the `Checker` class is equal to `512`. If this condition is met, it displays a toast with the message "You won," decrypts the flag, and sets the resulting text in the TextView. Otherwise, it will show a toast with the message "TRY AGAIN."
+Resumo da lógica:
 
-There are two main ways to solve it.
+| Condição              | Resultado no app                                |
+| --------------------- | ----------------------------------------------- |
+| `Checker.code == 512` | Mostra “You won”, descriptografa a FLAG e exibe |
+| Senão                 | Mostra “TRY AGAIN”                              |
 
-- Changing the value of `code` variable directly to `512` using frida.
-- Calling the `increase()` method 256 times.
+---
 
-## Changing the value of code variable
+Existem **duas maneiras** de resolver:
 
-To obtain the flag, we need to set the value of our code variable to `512`. We can easily achieve this by changing the value of this variable using Frida.
+- Alterar diretamente o valor da variável `code` para **512**
+- Chamar o método `increase()` **256 vezes**
+
+Vamos ver as duas soluções com Frida 
+
+---
+
+## Método 1 — Alterando o valor da variável `code`
+
+Trecho original no APK:
 
 ```java
 public class Checker {
@@ -61,89 +84,107 @@ public class Checker {
 }
 ```
 
-Let's show you a basic template.
+Template para alterar variáveis estáticas com Frida:
 
 ```javascript
 Java.perform(function (){
 
-    var <class_reference> = Java.use("<package_name>.<class>");
-    <class_reference>.<variable>.value = <value>;
+    var <class_reference> = Java.use("<package>.<classe>");
+    <class_reference>.<variável>.value = <valor>;
 
 })
 ```
 
-Let's change the value of the code variable.
-
-- Package name : `com.ad2001.frida0x3`
-- Class name : `Checker`
+Aplicando ao caso:
 
 ```javascript
 Java.perform(function (){
 
-    var a = Java.use("com.ad2001.frida0x3.Checker");  // class reference
+    var a = Java.use("com.ad2001.frida0x3.Checker");
     a.code.value = 512;
 
 })
 ```
 
-So let's start frida and inject this code.
+Executando:
 
-```
+```bash
 frida -U -f com.ad2001.frida0x3
 ```
 
 ![](Images/4.png)
 
-Before hooking, if you click the button, it displays the message "TRY  AGAIN." Now, let's inject our code and see what happens.
+Antes do script → “TRY AGAIN”
+
+Após injetar → clique no botão:
 
 ![](Images/5.png)
 
-Let's click our button again.
+E…
 
 ![](Images/6.png)
 
-And we got the flag. That was easy right?
+ FLAG encontrada com sucesso!
 
-Let's try the second way to solve it.
+---
 
-## Calling the increase() method
+## Método 2 — Chamando `increase()` 256 vezes
 
-Another approach is to call the `increase()` method 256 times. Each invocation of this method increments the value of the `code` variable by 2. We already know how to invoke a method in Frida (as mentioned in the previous post), so to call the `increase()` method multiple times, we can simply use a loop.
+Cada execução de `increase()`:
 
-Let's write the frida script.
+```
+code += 2
+```
 
-- Package name : `com.ad2001.frida0x3`
-- Class name : `Checker`
-- Method name : `increase()`
+Então:
+
+```
+2 × 256 = 512  → condição satisfeita
+```
+
+Script:
 
 ```javascript
 Java.perform(function () {
-    var a = Java.use("com.ad2001.frida0x3.Checker");  // class reference
+    var a = Java.use("com.ad2001.frida0x3.Checker");
 
     for (var i = 1; i <= 256; i++) {
         console.log("Calling increase() method " + i + " times");
         a.increase();
     }
 });
-
 ```
 
-Let's close our application and open again.
+Novamente:
 
-```
+```bash
 frida -U -f com.ad2001.frida0x3
 ```
 
-Now paste the script in the console.
+Cole o script no console:
 
 ![](Images/7.png)
 
-We can see that our script starts calling the `increase()` method repeatedly.
+Ele irá chamar a função repetidamente:
 
 ![](Images/8.png)
 
-Now let's click on our button. If the value of `code` is 256, then we will get the flag.
+Clique no botão e…
 
 ![](Images/9.png)
 
-As expected, we got the flag.
+ FLAG obtida novamente!
+
+---
+
+## Conclusão
+
+Você aprendeu mais duas técnicas fundamentais com Frida:
+
+| Técnica                     | Aplicação                      |
+| --------------------------- | ------------------------------ |
+| Alterar variáveis estáticas | Bypass de verificações simples |
+| Invocar métodos estáticos   | Manipular lógica da aplicação  |
+
+Essas habilidades serão muito úteis nos próximos desafios 
+
