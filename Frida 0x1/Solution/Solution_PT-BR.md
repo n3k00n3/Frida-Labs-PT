@@ -13,7 +13,7 @@ Vamos iniciar com a primeira coisa. O que é Frida?
 
 [Frida](https://frida.re/) é como uma ferramenta mágica para seu computador ou dispositivo móvel. Ele te ajuda a visualizar o que está acontecendo dentro de outros programas e aplicativos, mesmo que você não tenha o código original. É como olhar através de uma janela para entender como as coisas funcionam. Frida também pode hookar as funcionalidades dos programas. Com Frida você tem o poder de modificar e observar como um programa ou aplicativo móvel funciona por dentro.
 
-* **Intercpetando Chamadas de Funções:** Frida permite que você identifique funções especificas ou métodos dentro de um programa ou aplicativo e interceptar elas. Quando essas funções são chamadas, Frida pode realizar mudanças nos dados que as funções recebem ou verificar o que elas estão fazendo.
+* **Interceptando Chamadas de Funções:** Frida permite que você identifique funções especificas ou métodos dentro de um programa ou aplicativo e interceptar elas. Quando essas funções são chamadas, Frida pode realizar mudanças nos dados que as funções recebem ou verificar o que elas estão fazendo.
 
 * **Observando e Modificando:** Você pode monitorar o que está acontecendo dentro do programa em tempo de execução. Por exemplo, você pode ver os valotes das variáveis, entender o fluxo do programa e modificar o dado ou código que está sendo executado.
 
@@ -37,7 +37,7 @@ Próxima parte é copiar o servidor frida no dispostivo.
 https://github.com/frida/frida/releases
 ```
 
-Você  deve selecionar o servidor baseado na sua arquitetura. Se eu estiver usando um emulador no Android Studio ou Genymotion, em uma plataforma x86, teremos que fazer o download da versão x86 do frida-server.
+Você  deve selecionar o servidor baseado na sua arquitetura. Se você estiver usando um emulador no Android Studio ou Genymotion, em uma plataforma x86, teremos que fazer o download da versão x86 do frida-server.
 
 ![](images/1.png)
 
@@ -509,5 +509,6 @@ Java.perform(function() {
 ![](images/29.png)
 
 Como esperado, conseguimos a flag.
+
 
 Esses são os fundamentos de hookar um método com o Frida e exibir seus argumentos e valores de retorno. Frida é uma ferramenta muito poderosa, e exploraremos alguns de seus recursos principais ao longo da série.
