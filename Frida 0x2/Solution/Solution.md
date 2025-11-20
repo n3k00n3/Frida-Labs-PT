@@ -1,45 +1,68 @@
 
+## Pré-requisitos
 
-## Prerequisites
+* Básico de Engenharia Reversa usando jadx.
+* Capacidade de ler e entender código Java.
+* Capacidade de escrever pequenos trechos de código em JavaScript.
+* Familiaridade com adb.
+* Dispositivo com root.
 
-- Basics of Reverse Engineering using jadx.
-- Ability to read and understand Java code.
-- Capability to write small JavaScript snippets.
-- Familiarity with adb.
-- Rooted device.
+## Desafio 0x2
 
-## Challenge 0x2
-
-Let's start with our apk. So let's install the application and take a look.
+Vamos começar com nosso APK. Então, vamos instalar a aplicação e dar uma olhada.
 
 ![](images/1.png)
 
+A aplicação é bem simples, consiste apenas em um **TextView**, sem botões ou qualquer outro elemento. O texto exibido no TextView diz **"HOOK ME!"**.
+Bom… é exatamente isso que vamos fazer.
 
-
-The application is quite simple,it only consists of a TextView, without any buttons or additional elements. The text displayed in the TextView reads 'HOOK ME!'. Well, that's precisely what we're going to do.
-
-Let's use jadx to reverse engineer the application.
+Vamos usar o **jadx** para engenharia reversa da aplicação.
 
 ![](images/2.png)
 
+Como podemos ver, é uma aplicação bem pequena.
+A única coisa que ela faz é configurar o TextView.
+Está evidente que a flag está dentro do método `get_flag()`.
 
+📌 Porém, o método **não é chamado** de lugar nenhum na aplicação.
 
-As we can see, it's a very small application. The only thing the application is currently doing is setting up the TextView. It's evident that our flag is within the `get_flag()` method. However, the method is not being called from anywhere. The `get_flag()` method is responsible for decrypting the flag and setting it into the TextView. From our initial observation, it's clear that AES is being used. While there are other methods to easily obtain the flag, that's not the primary goal here. There is also an `if` condition that checks if the argument variable `a` equals `4919`.
+O método `get_flag()` é responsável por:
 
-So to obtain the flag, we just need to call the `get_flag()` method. We can easily call this method using frida.
+* Descriptografar a flag
+* Exibir no TextView
 
-Let's start off by finding the package name of our application.
+Ao analisar rapidamente, percebemos que **AES** está sendo utilizado.
+Apesar de existirem outros métodos para descobrir a flag facilmente, o objetivo aqui é usar Frida.
+
+Outra informação importante: existe uma condição `if` que verifica se o argumento `a` é igual a **4919**.
+
+➡️ Ou seja: para obter a flag, só precisamos **chamar o método `get_flag()` passando 4919**.
+
+Podemos fazer isso facilmente com Frida.
+
+---
+
+Vamos iniciar encontrando o nome do pacote da aplicação:
 
 ![](images/3.png)
 
-So the package name is `com.ad2001.frida0x2`. We can also find this in jadx.
+O nome do pacote é:
+
+```
+com.ad2001.frida0x2
+```
+
+Também podemos confirmá-lo no jadx:
 
 ![](images/4.png)
 
-Let's start writing our frida script.
+---
+
+Vamos começar a escrever nosso script Frida.
+
+Template para chamar método **estático**:
 
 ```javascript
-
 Java.perform(function() {
 
     var <class_reference> = Java.use("<package_name>.<class>");
@@ -48,10 +71,9 @@ Java.perform(function() {
 })
 ```
 
-This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>`.
+Aplicando ao nosso caso:
 
 ```javascript
-
 Java.perform(function() {
 
     var a = Java.use("com.ad2001.frida0x2.MainActivity");
@@ -59,19 +81,21 @@ Java.perform(function() {
 })
 ```
 
-We got the reference to `MainActivity`, now let's call the `get_flag()` method. We also need to pass the argument in this function. To get the flag, we need to satisfy the `if` condition, and for that, we need to pass `4919` as the argument.
+Obtivemos a referência para `MainActivity`.
+Agora vamos chamar `get_flag()` passando **4919**, para satisfazer o `if`.
 
 ```javascript
-
 Java.perform(function() {
 
     var a = Java.use("com.ad2001.frida0x2.MainActivity");
-    a.get_flag(4919);  // method name
+    a.get_flag(4919);
 
 })
 ```
 
-Let's try using this script.
+---
+
+Agora vamos executar:
 
 ```
 frida -U -f com.ad2001.frida0x2
@@ -79,11 +103,14 @@ frida -U -f com.ad2001.frida0x2
 
 ![](images/5.png)
 
-Pressing enter will run the script. Now let's check our device.
+Pressione **ENTER** para rodar o script.
+
+Agora verifique o dispositivo:
 
 ![](images/6.png)
 
+---
 
+💥 BOOM! FLAG obtida!
 
-BOOM !!  We got our flag. So this is how you can call static methods in frida.
-
+Essa é a forma de chamar **métodos estáticos** utilizando Frida.
