@@ -24,7 +24,7 @@ Como podemos ver, é uma aplicação bem pequena.
 A única coisa que ela faz é configurar o TextView.
 Está evidente que a flag está dentro do método `get_flag()`.
 
-📌 Porém, o método **não é chamado** de lugar nenhum na aplicação.
+Porém, o método **não é chamado** de lugar nenhum na aplicação.
 
 O método `get_flag()` é responsável por:
 
@@ -36,7 +36,7 @@ Apesar de existirem outros métodos para descobrir a flag facilmente, o objetivo
 
 Outra informação importante: existe uma condição `if` que verifica se o argumento `a` é igual a **4919**.
 
-➡️ Ou seja: para obter a flag, só precisamos **chamar o método `get_flag()` passando 4919**.
+Ou seja: para obter a flag, só precisamos **chamar o método `get_flag()` passando 4919**.
 
 Podemos fazer isso facilmente com Frida.
 
@@ -111,6 +111,6 @@ Agora verifique o dispositivo:
 
 ---
 
-💥 BOOM! FLAG obtida!
+BOOM! FLAG obtida!
 
 Essa é a forma de chamar **métodos estáticos** utilizando Frida.
